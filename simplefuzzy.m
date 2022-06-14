@@ -69,6 +69,9 @@ area_list = 0;
 
 %Step 5- Once the minimum distance is determined, assign the pixel the
 %index of the OD array. Repeat for all pixels in the array. 
+
+
+%This step is conducted to ensure that the image object generated can be used to query pixel coordinates from axes coordinates.
 Im1 = image(Ie);
 
 [nrows, ncols] = size(get(Im1,'CData'));
@@ -80,9 +83,15 @@ icx = size(Ie,2);
 
 Area_image = zeros(size(Ie));
 
+% Used to obtain the number of rows contained within the data container 'Centroids'
+
 Sz = size(centroids,1);
 
+% Generating an empty array with the same size as the array centroids.
+
 pixel_centroids(Sz,2) = 0;
+
+%Converting centroid axes positions into centroid pixel positions- this step outputs the same results and is thus irrelevant.
 for k = 1:Sz
     Kx = centroids(k,1);
     Ky = centroids(k,2);
@@ -90,6 +99,9 @@ for k = 1:Sz
     pixel_centroids(k,2) = axes2pix(nrows, YData, Ky);
 end
 
+
+%An additional data container termed as a cell array to organiye the x and y coordinates of the 
+%centroids within the image along with the labels stored in the 3rd cell of the array
 OD_array= {};
 OD_array{1} = pixel_centroids(:,1);
 OD_array{2} = pixel_centroids(:,2);
@@ -99,15 +111,19 @@ Sz = size(pixel_centroids,1);
 lsz = [1:Sz];
 tsz = lsz';
 
-OD_array{3} = tsz;
+OD_array{3} = tsz; % labels of each of the centroid coordinates stored in the 3rd cell of the OD_array
 
 D_array(Sz) = 0;
 
+% Iteration throughout all the pixels of the image. Exemplified by the double for loop statements.
 for i = 1:icx
     for j = 1:icy
         if(Ie(j,i) == 0)
             continue
         end
+        
+        %Distance of particular pixel in question is assayed against each centroid stored in the earlier cell array. All pixel-centroid distances
+        % are stored in another container termed D_array.
         
         for ik = 1:Sz
         D = sqrt((i-OD_array{1}(ik))^2+(j-OD_array{2}(ik))^2);
@@ -115,6 +131,8 @@ for i = 1:icx
         
         end
         
+        %The minimum value of the d_array is assayed and the corresponding label of this particular minimum value is used as an entry instead
+        %of the original greyscale value corresponding to the pixel of the image in question.
         mind = min(D_array);
         binD = D_array == mind;
         duplicates = sum(binD, 'all');
@@ -125,10 +143,13 @@ for i = 1:icx
     end
 end
 
+%The image Area_image2 is now a label map that can be used to query the areas of each individual centroid region within the image.
 
 area_list = [];
 Area_image2 = [];
 
+%This for loop statement is utilized to extract the areas from individual regions within the Area_image2 label map and store it in a list container termed
+%as area_list which gives an iteration of all the labels and their associated areas.
 for ji = 1:Sz
    area_list(ji,1) = ji;
    Area_image2 = Area_image;
